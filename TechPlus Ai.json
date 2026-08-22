@@ -1,0 +1,612 @@
+{
+  "name": "TechPlus Ai",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -912,
+        -48
+      ],
+      "id": "47c76585-d3e2-46ca-b6b0-d7e747aee0c2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://github.blog/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        -336
+      ],
+      "id": "6003918a-4a76-4092-a08e-3aa5921dd350",
+      "name": "GitHub RSS",
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "url": "https://openai.com/news/rss.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        -112
+      ],
+      "id": "f1b6edfb-a8c6-4ddc-948c-4deb91dde9df",
+      "name": "OpenAI RSS",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://aws.amazon.com/blogs/aws/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -592,
+        176
+      ],
+      "id": "94ea263f-d288-486d-a500-f77833024f64",
+      "name": "AWS RSS",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.microsoft.com/en-us/microsoft-365/blog/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        416
+      ],
+      "id": "7d5d10c3-30b5-4186-8db2-5deb8c266dbc",
+      "name": "Microsoft RSS",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -368,
+        -208
+      ],
+      "id": "9349b2d9-28eb-4517-af31-d257528c2c2a",
+      "name": "Merge 1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -368,
+        0
+      ],
+      "id": "c7c08068-3294-452e-9dbe-7cebc1056eb5",
+      "name": "Merge 2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -368,
+        240
+      ],
+      "id": "5399c725-ef44-4859-beb0-b436770a66ee",
+      "name": "Merge 3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"title\": \"={{ $json.title }}\",\n  \"url\": \"={{ $json.link }}\",\n  \"published\": \"={{ $json.pubDate }}\",\n  \"content\": \"={{ $json.content || $json.contentSnippet || $json.description || '' }}\",\n  \"source\": \"={{ $json.creator || $json.author || 'Unknown' }}\"\n}\n",
+        "includeOtherFields": "=\n\n{\n  \"title\": \"={{ $json.title }}\",\n  \"url\": \"={{ $json.link }}\",\n  \"published\": \"={{ $json.pubDate }}\",\n  \"content\": \"={{ $json.content || $json.contentSnippet || $json.description || '' }}\",\n  \"source\": \"={{ $json.creator || $json.author || 'Unknown' }}\"\n}\n\nInclude Other Input Fields: ON",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -160,
+        240
+      ],
+      "id": "7520a568-05fc-40ba-b7b9-6d3d291ffbab",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "430b8f16-8940-4cd1-a493-ec74d63b2056",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7c418e5d-4276-4ad2-90c3-6dc0abc11fd8",
+              "leftValue": "={{ DateTime.fromFormat($json.pubDate, \"ccc, dd LLL yyyy HH:mm:ss ZZZ\").toISO() }}",
+              "rightValue": "={{ $now.minus({ hours: 24 }).toISO() }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        240
+      ],
+      "id": "9ca97faa-5569-4b38-8da4-72dc7d3decf1",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8418184b-3634-434b-ba11-e1591a938893",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an IT technology news analyst. Analyze the following articles:\n\n{{ JSON.stringify($json.Data) }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        208
+      ],
+      "id": "fc0aa5f5-21e4-4c19-b042-9aa77bb2707b",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        480
+      ],
+      "id": "28b13489-0c78-4181-ac70-5154dd4f64b3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "neAFNJ8FfJW70Kdy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are the second-stage AI reviewer for my daily IT intelligence system.\n\nReview the output generated by the first AI.\n\nYour tasks:\n1. Remove duplicate or repetitive news.\n2. Identify information that appears unreliable or unclear.\n3. Keep only genuinely useful IT updates.\n4. Prioritize:\n   - AI and AI agents\n   - New AI tools and model releases\n   - Cybersecurity\n   - Cloud computing\n   - Microsoft, Google, AWS and other major technology companies\n   - New courses, certifications and learning opportunities\n   - Important changes to existing AI tools\n   - Major developer and software updates\n5. Keep important links when available.\n6. Do not invent or assume information that is not present in the input.\n\nReturn a clean list of the most important updates.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        -256
+      ],
+      "id": "99b126da-d13d-4d95-bc1f-a44b40059b72",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        -16
+      ],
+      "id": "4e715c66-df41-40f0-880b-ed9ecc883189",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "pfNEUmloCmu3CEyh",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        -32
+      ],
+      "id": "02b031d5-498a-48b2-bedc-5a9d5d49e556",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the final editor of my Daily IT Intelligence system.\n\nYou will receive analyses generated independently by multiple AI systems. Your job is to combine them into ONE accurate, useful, concise daily IT news digest for WhatsApp.\n\nIMPORTANT RULES:\n- Remove duplicate or repeated stories.\n- Keep only genuinely important and useful updates.\n- If the AI analyses disagree or information is unclear, do not invent facts.\n- Do not create fake links, dates, numbers, courses, or announcements.\n- Keep the original source and URL when available.\n- Use simple English suitable for an IT student.\n- Prioritize quality over quantity.\n- Maximum 8 important updates.\n- Keep each update concise and easy to scan on WhatsApp.\n- If there are no important updates in a category, do not add unnecessary content.\n\nPrioritize:\n1. Artificial Intelligence and AI Agents\n2. New AI models and major AI tools\n3. Cybersecurity\n4. Cloud computing\n5. Programming and developer tools\n6. Major updates from OpenAI, Google, Microsoft, AWS, GitHub and other important technology companies\n7. Important emerging technologies\n8. Useful courses, certifications, scholarships and learning opportunities\n\nIgnore:\n- Advertisements\n- Repeated information\n- Minor promotional announcements\n- Irrelevant news\n- Unverified claims\n\nUse this format:\n\n🚀 DAILY IT INTELLIGENCE\n📅 {{ $now.toFormat('dd MMM yyyy') }}\n\n🤖 AI & AGENTS\n• **Title** — What happened and why it matters.\n🔗 Source: [source name] — [URL]\n\n💻 DEVELOPMENT & CLOUD\n• **Title** — What happened and why it matters.\n🔗 Source: [source name] — [URL]\n\n🛡️ CYBERSECURITY\n• **Title** — What happened and why it matters.\n🔗 Source: [source name] — [URL]\n\n🎓 COURSES & OPPORTUNITIES\n• **Title** — What the opportunity is and why it is useful.\n🔗 Source: [source name] — [URL]\n\n⭐ TOP 3 TODAY\n1. Most important update\n2. Second most important update\n3. Third most important update\n\nReturn ONLY the final WhatsApp-ready message.\n\nHere are the analyses from the previous AI systems:\n\n{{ JSON.stringify($json) }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1072,
+        -48
+      ],
+      "id": "27415a6d-734a-4174-9db5-50881d0806c9",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -48
+      ],
+      "id": "bf03441d-d03f-4ac8-a339-d51891869847",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        176
+      ],
+      "id": "e6f775d5-8349-4d56-a22f-41b703f2606b",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "neAFNJ8FfJW70Kdy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "kirannadeem492@gmail.com",
+        "subject": "Tech info",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        -48
+      ],
+      "id": "c7cc3403-4930-4c52-a0d9-a14f6813fdbb",
+      "name": "Send a message",
+      "webhookId": "cdad40f4-d2aa-4f9b-8ab5-46b9ae6a50d5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sC346p5yxlrgV45H",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "GitHub RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AWS RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OpenAI RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AWS RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge 2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenAI RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Microsoft RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge 3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge 1": {
+      "main": [
+        [
+          {
+            "node": "Merge 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 2": {
+      "main": [
+        [
+          {
+            "node": "Merge 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6888537a-a845-427c-bf08-01d7cd942985",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ea85a273fb6245d1f782c07927d2e0e8df1a4826b7e8cba550f7bee14544f99b"
+  },
+  "nodeGroups": [],
+  "id": "CzSs94ka1KudGLUl",
+  "tags": []
+}
